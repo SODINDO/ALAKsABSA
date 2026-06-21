@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>ABSA Retail Sales Dashboard 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --red:#c8102e;--red2:#a00e25;--red3:#f5e6e9;
+  --ink:#0f172a;--ink2:#334155;--ink3:#64748b;--ink4:#94a3b8;
+  --line:#e2e8f0;--line2:#f1f5f9;--surf:#fff;--bg:#f8fafc;
+  --green:#16a34a;--green2:#dcfce7;--amber:#b45309;--amber2:#fef3c7;
+  --blue:#1d4ed8;--blue2:#dbeafe;
+}
+html{font-size:13px;-webkit-font-smoothing:antialiased}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh}
+
+/*HEADER*/
+.hdr{background:var(--surf);border-bottom:2.5px solid var(--red);height:56px;display:flex;align-items:center;padding:0 24px;gap:20px;position:sticky;top:0;z-index:200}
+.logo{display:flex;align-items:center;gap:9px;flex-shrink:0}
+.logo-circle{width:36px;height:36px;border-radius:50%;border:2px solid var(--red);display:flex;align-items:center;justify-content:center;position:relative}
+.logo-circle::before{content:'';position:absolute;inset:1px;border-radius:50%;border:1px dashed rgba(200,16,46,.3)}
+.logo-txt{font-size:11.5px;font-weight:700;color:var(--red);letter-spacing:-.3px}
+.logo-tag{font-size:11px;font-style:italic;color:var(--red);font-weight:400}
+.hdr-mid{flex:1;text-align:center}
+.hdr-mid h1{font-size:13.5px;font-weight:700;color:var(--red);letter-spacing:.1em;text-transform:uppercase}
+.hdr-mid p{font-size:10px;color:var(--ink4);letter-spacing:.06em;margin-top:1px}
+.hdr-right{display:flex;align-items:center;gap:14px;flex-shrink:0}
+.live-badge{display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--ink3);background:var(--line2);padding:4px 9px;border-radius:20px;cursor:pointer}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+.live-dot.syncing{background:var(--amber);animation:none}
+.live-dot.error{background:#ef4444;animation:none}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.hdr-date{font-size:10.5px;color:var(--ink4)}
+
+/* TABS */
+.tab-bar{background:var(--surf);border-bottom:1px solid var(--line);padding:0 24px;display:flex;align-items:center;gap:0;position:sticky;top:56px;z-index:190}
+.tab{padding:12px 18px;font-size:12px;font-weight:500;color:var(--ink3);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:color .15s,border-color .15s;letter-spacing:.01em}
+.tab.active{color:var(--red);border-bottom-color:var(--red);font-weight:600}
+.month-strip{margin-left:auto;display:flex;gap:3px;align-items:center}
+.mb{padding:4px 10px;font-size:10.5px;font-weight:600;border:1px solid var(--line);border-radius:4px;background:var(--surf);color:var(--ink3);cursor:pointer;font-family:inherit;letter-spacing:.02em}
+.mb.on{background:var(--red);border-color:var(--red);color:#fff}
+
+/* LAYOUT */
+.page{padding:18px 24px 40px;max-width:1520px;margin:0 auto;display:none;flex-direction:column;gap:16px}
+.page.active{display:flex}
+
+/* KPI ROW */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.kc{background:var(--surf);border:1px solid var(--line);border-radius:8px;padding:16px 18px}
+.kc-lbl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--ink3);margin-bottom:6px}
+.kc-val{font-size:22px;font-weight:700;color:var(--ink);line-height:1;margin-bottom:4px;font-variant-numeric:tabular-nums}
+.kc-sub{font-size:10.5px;color:var(--ink4);margin-bottom:8px}
+.pt{height:3px;background:var(--line2);border-radius:2px;overflow:hidden}
+.pb{height:100%;border-radius:2px;width:0;transition:width .9s cubic-bezier(.22,1,.36,1)}
+
+/* SECTION CARD */
+.card{background:var(--surf);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.card-hdr{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--line2)}
+.card-hdr h2{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--ink)}
+.card-meta{font-size:10.5px;color:var(--ink4)}
+.tbl-wrap{overflow-x:auto}
+
+/* TABLE */
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead tr{background:var(--red)}
+thead th{color:#fff;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.05em;padding:8px 12px;text-align:left;white-space:nowrap;border-right:1px solid rgba(255,255,255,.1)}
+thead th.r{text-align:right}
+tbody td{padding:7px 12px;border-bottom:1px solid var(--line2);white-space:nowrap;color:var(--ink2)}
+tbody td.r{text-align:right;font-variant-numeric:tabular-nums;font-size:11.5px}
+tbody td.bold{font-weight:600;color:var(--ink)}
+tbody tr:nth-child(even){background:#fafbfc}
+tfoot tr{background:var(--ink)}
+tfoot td{padding:8px 12px;color:#fff;font-weight:700;font-size:11.5px;border:none;font-variant-numeric:tabular-nums}
+tfoot td.r{text-align:right}
+
+/* PILL */
+.pill{display:inline-block;padding:1px 7px;border-radius:3px;font-size:11px;font-weight:700;font-variant-numeric:tabular-nums}
+.pill.R{background:#fee2e2;color:#991b1b}
+.pill.A{background:#fef3c7;color:#92400e}
+.pill.G{background:#dcfce7;color:#166534}
+tfoot .pill.R{background:rgba(220,38,38,.3);color:#fca5a5}
+tfoot .pill.A{background:rgba(251,191,36,.25);color:#fde68a}
+tfoot .pill.G{background:rgba(22,163,74,.3);color:#86efac}
+
+/* CHARTS GRID */
+.charts-grid{display:grid;gap:12px}
+.charts-grid.c4{grid-template-columns:180px 1fr 220px 220px}
+.charts-grid.c3{grid-template-columns:180px 1fr 220px}
+.charts-grid.c2{grid-template-columns:1fr 1fr}
+.cc{background:var(--surf);border:1px solid var(--line);border-radius:8px;padding:14px}
+.cc-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--ink3);margin-bottom:12px}
+.ch{position:relative;height:180px}
+
+/* DONUT */
+.dn-wrap{position:relative;width:140px;height:140px;margin:0 auto 10px}
+.dn-wrap svg{width:100%;height:100%;transform:rotate(-90deg)}
+.dn-ctr{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
+.dn-n{font-size:17px;font-weight:700;color:var(--ink);line-height:1}
+.dn-l{font-size:9.5px;color:var(--ink4);margin-top:1px}
+.leg{display:flex;flex-direction:column;gap:6px}
+.leg-row{display:flex;align-items:center;gap:6px;font-size:10.5px;color:var(--ink2)}
+.leg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.leg-pct{margin-left:auto;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+.cleg{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:8px;font-size:10px;color:var(--ink3)}
+.cleg-i{display:flex;align-items:center;gap:3px}
+.cleg-sq{width:8px;height:8px;border-radius:2px}
+
+/* DUAL TABLE LAYOUT */
+.dual{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sec-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#fff;background:var(--ink);padding:7px 14px}
+
+/* BRANCH PRODUCTION */
+.bp-grid{display:grid;grid-template-columns:1fr 340px;gap:12px}
+.bp-side{display:flex;flex-direction:column;gap:10px}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;right:20px;background:var(--ink);color:#fff;padding:8px 14px;border-radius:7px;font-size:12px;font-weight:500;display:flex;align-items:center;gap:7px;opacity:0;transform:translateY(6px);transition:all .2s;pointer-events:none;z-index:999}
+.toast.show{opacity:1;transform:none}
+
+/* SYNC BANNER */
+.sync-banner{background:#fffbeb;border:1px solid #fbbf24;border-radius:6px;padding:8px 14px;font-size:11px;color:#92400e;display:flex;align-items:center;gap:8px}
+.sync-banner.hidden{display:none}
+.sync-banner a{color:var(--blue);font-weight:600}
+
+/* ══════════════════════════════════════════════════
+   SALES CONSULTANTS PAGE — REDESIGNED TO MATCH PHOTO
+══════════════════════════════════════════════════ */
+.sc-layout{display:grid;grid-template-columns:1fr 320px;gap:14px;align-items:start}
+.sc-left{display:flex;flex-direction:column;gap:14px}
+.sc-charts-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+
+/* SC chart cards */
+.sc-chart-card{background:var(--surf);border:1px solid var(--line);border-radius:8px;padding:16px}
+.sc-chart-title{font-size:11px;font-weight:700;color:var(--ink);margin-bottom:14px}
+
+/* Premium term horizontal bar */
+.term-bars{display:flex;flex-direction:column;gap:10px;margin-top:8px}
+.term-row{display:flex;align-items:center;gap:10px}
+.term-label{font-size:10.5px;color:var(--ink3);width:52px;flex-shrink:0;text-align:right}
+.term-bar-wrap{flex:1;background:var(--line2);border-radius:3px;overflow:hidden;height:28px;position:relative}
+.term-bar-fill{height:100%;border-radius:3px;display:flex;align-items:center;padding-left:10px;font-size:11px;font-weight:700;color:#fff;min-width:40px;transition:width 1s cubic-bezier(.22,1,.36,1)}
+.term-pct{font-size:10.5px;color:var(--ink3);width:38px;flex-shrink:0}
+
+/* Branch table on right */
+.sc-branch-card{background:var(--surf);border:1px solid var(--line);border-radius:8px;overflow:hidden;max-height:680px;display:flex;flex-direction:column}
+.sc-branch-hdr{background:var(--red);padding:9px 14px}
+.sc-branch-hdr-row{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center}
+.sc-branch-hdr-col{font-size:10px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.04em}
+.sc-branch-hdr-col.r{text-align:right}
+.sc-branch-body{overflow-y:auto;flex:1}
+.sc-branch-row{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:6px 14px;border-bottom:1px solid var(--line2);font-size:11.5px}
+.sc-branch-row:nth-child(even){background:#fafbfc}
+.sc-branch-row:last-child{border-bottom:none}
+.sc-branch-name{color:var(--ink2);font-size:11px}
+.sc-branch-val{text-align:right;font-variant-numeric:tabular-nums;font-size:11px;color:var(--ink);font-weight:500}
+.sc-branch-foot{background:var(--ink);padding:7px 14px;display:grid;grid-template-columns:1fr auto auto;gap:8px}
+.sc-branch-foot span{color:#fff;font-weight:700;font-size:11.5px;font-variant-numeric:tabular-nums}
+.sc-branch-foot span.r{text-align:right}
+
+/* ══════════════════════════════════════════════════
+   TEAM LEADERS
+══════════════════════════════════════════════════ */
+.tl-section-label{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink4);padding:2px 0 6px}
+.tl-kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.tl-kpi{background:var(--surf);border:1px solid var(--line);border-radius:10px;padding:14px 18px;display:flex;flex-direction:column;gap:4px}
+.tl-kpi-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--ink4)}
+.tl-kpi-value{font-size:20px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+.tl-kpi-sub{font-size:10.5px;color:var(--ink3)}
+.tl-cards-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.tl-card{background:var(--surf);border:1px solid var(--line);border-radius:10px;padding:14px 16px;cursor:pointer;position:relative;overflow:hidden}
+.tl-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--red)}
+.tl-card-avatar{width:38px;height:38px;border-radius:50%;background:var(--red3);font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;margin-bottom:10px}
+.tl-card-name{font-size:12px;font-weight:700;color:var(--ink);margin-bottom:4px;line-height:1.3}
+.tl-card-rm{font-size:10px;color:var(--ink4);margin-bottom:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tl-card-stats{display:flex;flex-direction:column;gap:5px}
+.tl-stat-row{display:flex;align-items:center;justify-content:space-between;font-size:10.5px}
+.tl-stat-label{color:var(--ink3)}
+.tl-stat-val{font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink)}
+.tl-card-bar{height:3px;background:var(--line2);border-radius:2px;margin-top:8px;overflow:hidden}
+.tl-card-bar-fill{height:100%;border-radius:2px;transition:width 1s cubic-bezier(.22,1,.36,1)}
+.tl-tables-dual{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tl-table-panel{background:var(--surf);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.tl-panel-hdr{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--line2);font-size:11.5px;font-weight:600;color:var(--ink)}
+.tl-panel-badge{font-size:9px;font-weight:700;letter-spacing:.08em;padding:2px 7px;border-radius:3px}
+.tl-panel-badge.mtd{background:#dbeafe;color:#1d4ed8}
+.tl-panel-badge.ytd{background:#f0fdf4;color:#15803d}
+.tl-row-clickable{cursor:pointer;transition:background .1s}
+.tl-row-clickable:hover{background:#fef2f2 !important}
+.tl-row-clickable td:first-child{color:var(--red);font-weight:600}
+.tl-detail-topbar{display:flex;align-items:center;gap:16px;margin-bottom:4px}
+.tl-back-btn{display:flex;align-items:center;gap:6px;background:none;border:1px solid var(--line);border-radius:6px;padding:7px 14px;font-size:12px;font-weight:500;color:var(--ink2);cursor:pointer;font-family:inherit;transition:all .15s}
+.tl-back-btn:hover{background:var(--red);color:#fff;border-color:var(--red)}
+.tl-breadcrumb{font-size:12px;color:var(--ink4)}
+.tl-breadcrumb span{margin:0 4px;color:var(--ink4)}
+.tl-breadcrumb strong{color:var(--ink);font-weight:600}
+.tl-hero-card{background:var(--surf);border:1px solid var(--line);border-radius:12px;padding:20px 24px;display:flex;align-items:center;gap:20px;border-left:4px solid var(--red)}
+.tl-hero-avatar{width:56px;height:56px;border-radius:50%;background:var(--red);color:#fff;font-size:18px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.tl-hero-info{flex:1}
+.tl-hero-name{font-size:18px;font-weight:700;color:var(--ink);margin-bottom:8px}
+.tl-hero-meta{display:flex;gap:8px;flex-wrap:wrap}
+.tl-hero-tag{font-size:11px;font-weight:500;padding:3px 10px;border-radius:20px;border:1px solid var(--line)}
+.tl-hero-tag.rm-tag{background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe}
+.tl-hero-tag.sc-tag{background:#f0fdf4;color:#15803d;border-color:#bbf7d0}
+.tl-hero-tag.br-tag{background:#fdf4ff;color:#7e22ce;border-color:#e9d5ff}
+.tl-hero-kpis{display:flex;gap:24px;flex-shrink:0}
+.tl-hero-kpi{text-align:right}
+.tl-hero-kpi-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--ink4);margin-bottom:2px}
+.tl-hero-kpi-value{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums}
+.tl-hero-kpi-sub{font-size:10px;color:var(--ink3);margin-top:1px}
+.tl-detail-grid{display:grid;grid-template-columns:220px 1fr 280px;gap:14px;align-items:start}
+.tl-detail-section-hdr{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink4);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--line2)}
+.tl-detail-left,.tl-detail-mid,.tl-detail-right{background:var(--surf);border:1px solid var(--line);border-radius:10px;padding:16px}
+.tl-perf-cards{display:flex;flex-direction:column;gap:8px}
+.tl-perf-card{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.tl-perf-card-label{font-size:9.5px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--ink4);margin-bottom:3px}
+.tl-perf-card-value{font-size:15px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums;margin-bottom:2px}
+.tl-perf-card-pct{font-size:10px;color:var(--ink3)}
+.tl-perf-bar{height:4px;background:var(--line);border-radius:2px;margin-top:6px;overflow:hidden}
+.tl-perf-bar-fill{height:100%;border-radius:2px}
+.tl-monthly-table-wrap{overflow:auto;max-height:200px}
+.tl-monthly-table{width:100%;border-collapse:collapse;font-size:11.5px}
+.tl-monthly-table thead th{background:var(--ink2);color:#fff;padding:5px 8px;font-size:9.5px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;position:sticky;top:0}
+.tl-monthly-table thead th.r{text-align:right}
+.tl-monthly-table tbody td{padding:5px 8px;border-bottom:1px solid var(--line2);color:var(--ink2)}
+.tl-monthly-table tbody td.r{text-align:right;font-variant-numeric:tabular-nums}
+.tl-monthly-table tbody tr:nth-child(even){background:#f9fafb}
+.tl-sc-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border:1px solid var(--line);border-radius:7px;margin-bottom:7px;background:var(--bg)}
+.tl-sc-avatar{width:30px;height:30px;border-radius:50%;background:#dbeafe;color:#1d4ed8;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.tl-sc-info{flex:1;min-width:0}
+.tl-sc-name{font-size:12px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tl-sc-sub{font-size:10px;color:var(--ink4)}
+.tl-sc-pct{font-size:11px;font-weight:700;font-variant-numeric:tabular-nums;flex-shrink:0}
+.tl-branch-item{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border:1px solid var(--line);border-radius:7px;margin-bottom:6px;background:var(--bg)}
+.tl-branch-name{font-size:11.5px;font-weight:600;color:var(--ink2);display:flex;align-items:center;gap:6px}
+.tl-branch-dot{width:6px;height:6px;border-radius:50%;background:#7c3aed;flex-shrink:0}
+.tl-branch-val{font-size:11px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+.tl-branch-vol{font-size:10px;color:var(--ink4)}
+.tl-branch-right{text-align:right}
+.tl-empty{font-size:11px;color:var(--ink4);text-align:center;padding:20px;font-style:italic}
+
+@media(max-width:1200px){
+  .charts-grid.c4{grid-template-columns:1fr 1fr}
+  .dual{grid-template-columns:1fr}
+  .bp-grid{grid-template-columns:1fr}
+  .tl-cards-grid{grid-template-columns:repeat(3,1fr)}
+  .tl-tables-dual{grid-template-columns:1fr}
+  .tl-detail-grid{grid-template-columns:1fr 1fr}
+  .tl-detail-right{grid-column:span 2}
+  .sc-layout{grid-template-columns:1fr}
+  .sc-charts-row{grid-template-columns:1fr}
+}
+@media(max-width:900px){
+  .kpi-row{grid-template-columns:1fr 1fr}
+  .tab{padding:10px 12px;font-size:11px}
+  .month-strip{display:none}
+  .tl-cards-grid{grid-template-columns:1fr 1fr}
+  .tl-kpi-row{grid-template-columns:1fr 1fr}
+  .tl-hero-card{flex-wrap:wrap}
+  .tl-hero-kpis{flex-wrap:wrap;gap:12px}
+  .tl-detail-grid{grid-template-columns:1fr}
+  .tl-detail-right{grid-column:auto}
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="hdr">
+  <div class="logo">
+    <div class="logo-circle"><span class="logo-txt">absa</span></div>
+    <span class="logo-tag">Your story matters</span>
+  </div>
+  <div class="hdr-mid">
+    <h1>Retail Sales Performance Dashboard</h1>
+    <p>2026 Annual · Live from data.xlsx</p>
+  </div>
+  <div class="hdr-right">
+    <div class="live-badge" onclick="manualRefresh()" title="Click to refresh now">
+      <div class="live-dot" id="live-dot"></div>
+      <span id="sync-lbl">Live</span>
+    </div>
+    <div class="hdr-date" id="hdr-date">—</div>
+  </div>
+</header>
+
+<!-- TAB BAR -->
+<nav class="tab-bar">
+  <div class="tab active" data-tab="overall">Overall Performance</div>
+  <div class="tab" data-tab="rm">Regional Managers</div>
+  <div class="tab" data-tab="tl">Team Leaders</div>
+  <div class="tab" data-tab="sc">Sales Consultants</div>
+  <div class="tab" data-tab="bp">Branch Production</div>
+  <div class="month-strip" id="month-strip">
+    <span class="mb on" data-m="all">All</span>
+    <span class="mb" data-m="Jan">Jan</span>
+    <span class="mb" data-m="Feb">Feb</span>
+    <span class="mb" data-m="March">Mar</span>
+    <span class="mb" data-m="April">Apr</span>
+  </div>
+</nav>
+
+<!-- ═══ PAGE: OVERALL PERFORMANCE ═══ -->
+<div class="page active" id="page-overall">
+  <div class="sync-banner hidden" id="sync-banner">
+    ⚠ Using cached data — could not load data.xlsx.
+    <a href="#" onclick="manualRefresh();return false">Retry</a>
+  </div>
+  <div class="kpi-row">
+    <div class="kc"><div class="kc-lbl">Value Actual</div><div class="kc-val" id="ov-val">—</div><div class="kc-sub" id="ov-vsub">—</div><div class="pt"><div class="pb" id="ov-vbar" style="background:var(--red)"></div></div></div>
+    <div class="kc"><div class="kc-lbl">Volume Actual</div><div class="kc-val" id="ov-vol">—</div><div class="kc-sub" id="ov-qsub">—</div><div class="pt"><div class="pb" id="ov-qbar" style="background:#7c3aed"></div></div></div>
+    <div class="kc"><div class="kc-lbl">% Weighted</div><div class="kc-val" id="ov-wt">—</div><div class="kc-sub">Combined performance</div><div class="pt"><div class="pb" id="ov-wbar" style="background:var(--blue)"></div></div></div>
+    <div class="kc"><div class="kc-lbl">Total Records</div><div class="kc-val" id="ov-rec">—</div><div class="kc-sub">Transmittals processed</div></div>
+  </div>
+  <div class="card">
+    <div class="card-hdr"><h2>Cluster Performance</h2><span class="card-meta" id="ov-meta">—</span></div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Cluster</th><th class="r">Value Actual</th><th class="r">Value Target</th><th class="r">% of Value</th><th class="r">Volume Actual</th><th class="r">Volume Target</th><th class="r">% of Volume</th><th class="r">% Weighted</th><th>Progress</th></tr></thead>
+        <tbody id="ov-tbody"></tbody>
+        <tfoot id="ov-tfoot"></tfoot>
+      </table>
+    </div>
+  </div>
+  <div class="charts-grid c4">
+    <div class="cc">
+      <div class="cc-title">Sales Volume by Premium Term</div>
+      <div class="dn-wrap"><svg id="dn-svg" viewBox="0 0 100 100"></svg><div class="dn-ctr"><div class="dn-n" id="dn-n">—</div><div class="dn-l" id="dn-l">—</div></div></div>
+      <div class="leg" id="dn-leg"></div>
+    </div>
+    <div class="cc">
+      <div class="cc-title">Volume by Month &amp; Product</div>
+      <div class="cleg"><span class="cleg-i"><span class="cleg-sq" style="background:#dc2626"></span>Education</span><span class="cleg-i"><span class="cleg-sq" style="background:#7c3aed"></span>Endowment</span><span class="cleg-i"><span class="cleg-sq" style="background:#2563eb"></span>Family Protection</span></div>
+      <div class="ch"><canvas id="c-prod"></canvas></div>
+    </div>
+    <div class="cc"><div class="cc-title">Premium by Month</div><div class="ch"><canvas id="c-prem"></canvas></div></div>
+    <div class="cc"><div class="cc-title">Sales Volume by Month</div><div class="ch"><canvas id="c-vol"></canvas></div></div>
+  </div>
+</div>
+
+<!-- ═══ PAGE: REGIONAL MANAGERS ═══ -->
+<div class="page" id="page-rm">
+  <div class="card">
+    <div class="card-hdr"><h2>Regional Manager Performance</h2><span class="card-meta" id="rm-meta">—</span></div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Regional Manager</th><th class="r">Value Actual</th><th class="r">Value Target</th><th class="r">% of Value</th><th class="r">Volume Actual</th><th class="r">Volume Target</th><th class="r">% of Volume</th><th class="r">% Weighted</th><th>Progress</th></tr></thead>
+        <tbody id="rm-tbody"></tbody>
+        <tfoot id="rm-tfoot"></tfoot>
+      </table>
+    </div>
+  </div>
+  <div class="charts-grid c3">
+    <div class="cc">
+      <div class="cc-title">Premium Term Distribution</div>
+      <div class="dn-wrap"><svg id="dn-svg2" viewBox="0 0 100 100"></svg><div class="dn-ctr"><div class="dn-n" id="dn-n2">—</div><div class="dn-l" id="dn-l2">—</div></div></div>
+      <div class="leg" id="dn-leg2"></div>
+    </div>
+    <div class="cc">
+      <div class="cc-title">Volume by Month &amp; Product</div>
+      <div class="cleg"><span class="cleg-i"><span class="cleg-sq" style="background:#dc2626"></span>Education</span><span class="cleg-i"><span class="cleg-sq" style="background:#7c3aed"></span>Endowment</span><span class="cleg-i"><span class="cleg-sq" style="background:#2563eb"></span>Family Protection</span></div>
+      <div class="ch"><canvas id="c-rm-prod"></canvas></div>
+    </div>
+    <div class="cc"><div class="cc-title">Premium by Month</div><div class="ch"><canvas id="c-rm-prem"></canvas></div></div>
+  </div>
+</div>
+
+<!-- ═══ PAGE: TEAM LEADERS ═══ -->
+<div class="page" id="page-tl">
+  <div id="tl-list-view">
+    <div class="tl-kpi-row" id="tl-summary-kpis"></div>
+    <div class="tl-section-label" style="margin-top:4px">Team Leaders · Click any card to view full profile</div>
+    <div class="tl-cards-grid" id="tl-cards-grid"></div>
+    <div class="tl-tables-dual">
+      <div class="tl-table-panel">
+        <div class="tl-panel-hdr"><span class="tl-panel-badge mtd">MTD</span>Month to Date Performance</div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Team Leader</th><th class="r">Value Actual</th><th class="r">Value Target</th><th class="r">Val %</th><th class="r">Volume</th><th class="r">Vol Target</th><th class="r">Vol %</th><th class="r">Weighted</th></tr></thead>
+            <tbody id="tl-mtd-tbody"></tbody>
+            <tfoot id="tl-mtd-tfoot"></tfoot>
+          </table>
+        </div>
+      </div>
+      <div class="tl-table-panel">
+        <div class="tl-panel-hdr"><span class="tl-panel-badge ytd">YTD</span>Year to Date Performance</div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Team Leader</th><th class="r">Value Actual</th><th class="r">Value Target</th><th class="r">Val %</th><th class="r">Volume</th><th class="r">Vol Target</th><th class="r">Vol %</th><th class="r">Weighted</th></tr></thead>
+            <tbody id="tl-ytd-tbody"></tbody>
+            <tfoot id="tl-ytd-tfoot"></tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="charts-grid c2">
+      <div class="cc"><div class="cc-title">Volume by Month (All TLs)</div><div class="ch"><canvas id="c-tl-vol"></canvas></div></div>
+      <div class="cc"><div class="cc-title">Premium by Month (All TLs)</div><div class="ch"><canvas id="c-tl-prem"></canvas></div></div>
+    </div>
+  </div>
+
+  <!-- DETAIL VIEW -->
+  <div id="tl-detail-view" style="display:none">
+    <div class="tl-detail-topbar">
+      <button class="tl-back-btn" onclick="closeTLDetail()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        Back to Team Leaders
+      </button>
+      <div class="tl-breadcrumb">Team Leaders <span>›</span> <strong id="tl-detail-name-crumb">—</strong></div>
+    </div>
+    <div class="tl-hero-card">
+      <div class="tl-hero-avatar" id="tl-detail-avatar">AM</div>
+      <div class="tl-hero-info">
+        <div class="tl-hero-name" id="tl-detail-name">—</div>
+        <div class="tl-hero-meta">
+          <span class="tl-hero-tag rm-tag">RM: <span id="tl-detail-rm">—</span></span>
+          <span class="tl-hero-tag sc-tag"><span id="tl-detail-sc-count">—</span> Sales Consultants</span>
+          <span class="tl-hero-tag br-tag"><span id="tl-detail-br-count">—</span> Branches</span>
+        </div>
+      </div>
+      <div class="tl-hero-kpis" id="tl-hero-kpis"></div>
+    </div>
+    <div class="tl-detail-grid">
+      <div class="tl-detail-left">
+        <div class="tl-detail-section-hdr">Performance Metrics (YTD)</div>
+        <div class="tl-perf-cards" id="tl-perf-cards"></div>
+        <div class="tl-detail-section-hdr" style="margin-top:14px">Monthly Breakdown</div>
+        <div class="tl-monthly-table-wrap">
+          <table class="tl-monthly-table">
+            <thead><tr><th>Month</th><th class="r">Value</th><th class="r">Vol</th></tr></thead>
+            <tbody id="tl-monthly-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="tl-detail-mid">
+        <div class="tl-detail-section-hdr">Sales Consultants</div>
+        <div id="tl-sc-list"></div>
+        <div class="tl-detail-section-hdr" style="margin-top:14px">Branch Coverage</div>
+        <div id="tl-branch-list"></div>
+      </div>
+      <div class="tl-detail-right">
+        <div class="tl-detail-section-hdr">Monthly Volume</div>
+        <div style="height:150px;margin-bottom:14px"><canvas id="c-tl-detail-vol"></canvas></div>
+        <div class="tl-detail-section-hdr">Monthly Value</div>
+        <div style="height:150px;margin-bottom:14px"><canvas id="c-tl-detail-val"></canvas></div>
+        <div class="tl-detail-section-hdr">SC Contribution (YTD Volume)</div>
+        <div style="height:170px"><canvas id="c-tl-detail-sc"></canvas></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PAGE: SALES CONSULTANTS (REDESIGNED) ═══ -->
+<div class="page" id="page-sc">
+  <!-- YTD Table -->
+  <div class="card">
+    <div class="card-hdr">
+      <h2>Year to Date Performance</h2>
+      <span class="card-meta" id="sc-ytd-meta">—</span>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>Sales Consultant</th>
+          <th class="r">Value Actual</th>
+          <th class="r">Value Target</th>
+          <th class="r">% of Target</th>
+          <th class="r">Volume Actual</th>
+          <th class="r">Volume Target</th>
+          <th class="r">% of Vol</th>
+          <th class="r">% Weighted</th>
+        </tr></thead>
+        <tbody id="sc-ytd-tbody"></tbody>
+        <tfoot id="sc-ytd-tfoot"></tfoot>
+      </table>
+    </div>
+  </div>
+
+  <!-- Charts + Branch table layout -->
+  <div class="sc-layout">
+    <div class="sc-left">
+      <div class="sc-charts-row">
+        <!-- Count by premium_term -->
+        <div class="sc-chart-card">
+          <div class="sc-chart-title">Count by premium_term</div>
+          <div class="term-bars" id="sc-term-bars">
+            <div class="term-row">
+              <div class="term-label">&ge;10 yrs</div>
+              <div class="term-bar-wrap">
+                <div class="term-bar-fill" id="sc-term-gte10-bar" style="width:0%;background:#2563eb">—</div>
+              </div>
+              <div class="term-pct" id="sc-term-gte10-pct">—</div>
+            </div>
+            <div style="height:18px"></div>
+            <div class="term-row">
+              <div class="term-label">&lt;10 yrs</div>
+              <div class="term-bar-wrap">
+                <div class="term-bar-fill" id="sc-term-lt10-bar" style="width:0%;background:#2563eb">—</div>
+              </div>
+              <div class="term-pct" id="sc-term-lt10-pct">—</div>
+            </div>
+            <div style="height:8px"></div>
+            <div id="sc-term-totalpct" style="font-size:11px;color:var(--ink4);padding-left:62px"></div>
+          </div>
+        </div>
+
+        <!-- Count by product (pie) -->
+        <div class="sc-chart-card">
+          <div class="sc-chart-title">Count by product</div>
+          <div style="height:220px;position:relative"><canvas id="c-sc-prod-pie"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Branch table -->
+    <div class="sc-branch-card">
+      <div class="sc-branch-hdr">
+        <div class="sc-branch-hdr-row">
+          <div class="sc-branch-hdr-col">salesbranch</div>
+          <div class="sc-branch-hdr-col r">Sum of premium_collected</div>
+          <div class="sc-branch-hdr-col r">Sum of vol</div>
+        </div>
+      </div>
+      <div class="sc-branch-body" id="sc-branch-body"></div>
+      <div class="sc-branch-foot" id="sc-branch-foot">
+        <span>Total</span><span class="r" id="sc-branch-total-v">—</span><span class="r" id="sc-branch-total-q">—</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PAGE: BRANCH PRODUCTION ═══ -->
+<div class="page" id="page-bp">
+  <div class="bp-grid">
+    <div class="card">
+      <div class="sec-title">YEAR TO DATE PERFORMANCE — BRANCH PRODUCTION</div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Branch</th><th class="r">Value Actual</th><th class="r">Volume</th><th class="r">Education</th><th class="r">Endowment</th><th class="r">Family Protection</th></tr></thead>
+          <tbody id="bp-tbody"></tbody>
+          <tfoot id="bp-tfoot"></tfoot>
+        </table>
+      </div>
+    </div>
+    <div class="bp-side">
+      <div class="cc">
+        <div class="cc-title">Count by Premium Term</div>
+        <div class="ch" style="height:150px"><canvas id="c-bp-term"></canvas></div>
+      </div>
+      <div class="cc">
+        <div class="cc-title">Count by Product</div>
+        <div class="dn-wrap" style="width:120px;height:120px"><svg id="dn-bp" viewBox="0 0 100 100"></svg><div class="dn-ctr"><div class="dn-n" id="dn-bp-n">—</div><div class="dn-l" id="dn-bp-l">—</div></div></div>
+        <div class="leg" id="dn-bp-leg"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">&#8635; <span id="toast-msg">Updated</span></div>
+
+
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>
